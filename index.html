@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>AR เติมคำด้วยนิ้ววิเศษ</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<video id="video" autoplay playsinline muted></video>
+<div id="cursor"></div>
+<div class="topbar">
+  <div class="title">AR เติมคำด้วยนิ้ววิเศษ</div>
+  <div class="score">คะแนน: <span id="score">0</span></div>
+</div>
+<main class="game">
+  <div class="card">
+    <div class="hint" id="hint">ชี้นิ้วค้างที่ตัวอักษร 0.6 วิ แล้วนำไปวางช่องว่าง</div>
+    <div class="progress" id="progress">คำที่ 1/20</div>
+    <div class="word" id="wordBox"></div>
+    <div class="letters" id="lettersBox"></div>
+    <div class="message" id="message">ยกนิ้วชี้ให้อยู่ในกล้อง</div>
+    <button id="nextBtn" type="button">คำถัดไป</button>
+  </div>
+</main>
+<script src="words.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

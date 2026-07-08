@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>ARTHAI3 V7 - เติมคำด้วยนิ้ว</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<style>
+:root{--slot:92px;--mark:48px;--main:64px;--tray:78px;--snap:rgba(255,215,0,.92)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:"Noto Sans Thai","Sarabun",Tahoma,sans-serif;background:#000;touch-action:none;user-select:none}
+#cam{position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;transform:scaleX(-1);z-index:0}.veil{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.08));z-index:1;pointer-events:none}
+.app{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:18px 14px 20px;pointer-events:none}.top{width:min(980px,96vw);display:flex;align-items:center;justify-content:space-between;gap:10px}.badge{background:rgba(0,0,0,.54);color:#fff;border:2px solid rgba(255,255,255,.45);border-radius:20px;padding:8px 16px;font-size:22px;font-weight:800;text-shadow:0 2px 2px #000}.title{font-size:28px;text-align:center;line-height:1.2}.wordName{font-size:24px;color:#fff;background:rgba(0,0,0,.42);padding:8px 18px;border-radius:999px;text-shadow:0 2px 2px #000}.board{width:min(1040px,96vw);min-height:250px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:18px 10px;background:rgba(0,0,0,.18);border-radius:28px;border:2px solid rgba(255,255,255,.22);backdrop-filter:blur(1px)}
+.cell{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:96px;margin:0 1px;color:#fff;text-shadow:0 3px 3px rgba(0,0,0,.8);font-weight:900;font-size:var(--main);line-height:1}.fixed{padding:0 2px}.drop{width:var(--slot);height:var(--slot);border-radius:22px;border:5px dashed rgba(255,255,255,.92);background:rgba(255,255,255,.18);box-shadow:0 8px 22px rgba(0,0,0,.18),inset 0 0 0 2px rgba(0,0,0,.08)}.drop.target{border-color:var(--snap);background:rgba(255,235,100,.42);box-shadow:0 0 30px var(--snap)}.drop.filled{border-style:solid;background:rgba(255,255,255,.9);color:#111;text-shadow:none}.drop.mark{position:absolute;width:58px;height:46px;min-width:58px;border-radius:16px;font-size:42px;z-index:4}.cell .drop.above{left:50%;top:-42px;transform:translateX(-50%)}.cell .drop.below{left:50%;bottom:-38px;transform:translateX(-50%)}.cell .drop.after{position:relative;margin-left:2px}.markText{position:absolute;left:50%;top:-41px;transform:translateX(-50%);font-size:44px;color:#fff;text-shadow:0 3px 3px #000}.underText{position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);font-size:42px;color:#fff;text-shadow:0 3px 3px #000}.combo{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:96px}.combo .base{font-size:var(--main)}
+.tray{width:min(1040px,96vw);min-height:108px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;padding:12px 16px;background:rgba(0,0,0,.38);border-radius:30px;border:2px solid rgba(255,255,255,.24);pointer-events:none}.tile{width:var(--tray);height:var(--tray);display:flex;align-items:center;justify-content:center;border-radius:22px;background:rgba(255,236,89,.96);border:5px solid #fff;color:#111;font-size:56px;font-weight:900;box-shadow:0 9px 18px rgba(0,0,0,.32);pointer-events:none}.tile.hidden{opacity:.15}.tile.held{position:fixed;z-index:20;left:0;top:0;transform:translate(-50%,-50%) scale(1.08);box-shadow:0 0 28px rgba(255,235,50,.95);opacity:.96}.msg{min-height:44px;color:#fff;background:rgba(0,0,0,.48);border:2px solid rgba(255,255,255,.35);font-size:25px;font-weight:800;border-radius:999px;padding:8px 20px;text-align:center;text-shadow:0 2px 2px #000}.cursor{position:fixed;z-index:30;width:46px;height:46px;border-radius:50%;border:5px solid #ff1744;box-shadow:0 0 16px rgba(255,255,255,.9),0 0 22px #ff1744;transform:translate(-50%,-50%);pointer-events:none;display:none}.progressRing{position:fixed;z-index:29;width:68px;height:68px;border-radius:50%;border:6px solid rgba(255,255,255,.35);transform:translate(-50%,-50%);pointer-events:none;display:none}.progressRing.ready{border-color:#ffd400;box-shadow:0 0 18px #ffd400}.flash{animation:pop .38s ease}@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}@media(max-width:760px){:root{--slot:72px;--main:50px;--tray:68px}.title{font-size:20px}.badge{font-size:18px}.wordName{font-size:18px}.board{min-height:220px}.tile{font-size:44px}.msg{font-size:20px}.cell{height:84px}.drop.mark{width:50px;height:40px;font-size:34px}.cell .drop.above{top:-34px}.markText{top:-34px;font-size:36px}}
+</style>
+</head>
+<body>
+<video id="cam" playsinline autoplay muted></video><div class="veil"></div><div id="cursor" class="cursor"></div><div id="ring" class="progressRing"></div>
+<div class="app"><div class="top"><div class="badge title">AR เติมคำด้วยนิ้ว</div><div class="badge">คะแนน <span id="score">0</span></div></div><div id="wordName" class="wordName">กำลังเปิดกล้อง...</div><div id="board" class="board"></div><div id="tray" class="tray"></div><div id="msg" class="msg">ยกนิ้วชี้ให้อยู่ในกล้อง</div></div>
+<script>
+const WORDS=[
+{full:'ครอบครัว',tokens:[{t:'ค'},{t:'ร'},{t:'อ'},{slot:'บ'},{t:'ค'},{slot:'ร'},{slot:'ั',pos:'above',base:'ร'},{t:'ว'}],choices:['บ','ร','ั','ล','ว']},
+{full:'กลมเกลียว',tokens:[{t:'ก'},{t:'ล'},{t:'ม'},{t:'เ'},{slot:'ก'},{t:'ี'},{slot:'ย'},{t:'ว'}],choices:['ก','ย','ล','ว','ม']},
+{full:'ไขว้เขว',tokens:[{t:'ไ'},{slot:'ข'},{t:'ว'},{slot:'้',pos:'above',base:'ว'},{t:'เ'},{t:'ข'},{t:'ว'}],choices:['ข','้','ค','่','ว']},
+{full:'หมึกดำ',tokens:[{t:'ห'},{slot:'ม'},{t:'ึ'},{slot:'ก'},{t:'ด'},{t:'ำ'}],choices:['ม','ก','น','ง']},
+{full:'เหนื่อยล้า',tokens:[{t:'เ'},{t:'ห'},{slot:'น'},{slot:'ื่',pos:'above',base:'น'},{t:'อ'},{slot:'ย'},{t:'ล'},{t:'้'},{t:'า'}],choices:['น','ื่','ย','่','ว']},
+{full:'ใบหม่อน',tokens:[{t:'ใ'},{t:'บ'},{slot:'ห'},{t:'ม'},{t:'่'},{slot:'อ'},{t:'น'}],choices:['ห','อ','ม','น']},
+{full:'หมวดหมู่',tokens:[{t:'ห'},{t:'ม'},{slot:'ว'},{t:'ด'},{t:'ห'},{slot:'ม'},{t:'ู'},{t:'่'}],choices:['ว','ม','น','ล']},
+{full:'ตลบ',tokens:[{slot:'ต'},{t:'ล'},{slot:'บ'}],choices:['ต','บ','ก','ด']},
+{full:'ฝรั่ง',tokens:[{t:'ฝ'},{slot:'ร'},{t:'ั'},{t:'่'},{slot:'ง'}],choices:['ร','ง','ล','น']},
+{full:'อร่อย',tokens:[{t:'อ'},{slot:'ร'},{t:'่'},{t:'อ'},{slot:'ย'}],choices:['ร','ย','ล','ว']},
+{full:'พระจันทร์',tokens:[{t:'พ'},{t:'ร'},{t:'ะ'},{slot:'จ'},{t:'ั'},{t:'น'},{slot:'ท'},{t:'ร'},{t:'์'}],choices:['จ','ท','ช','น']},
+{full:'ประยุกต์',tokens:[{t:'ป'},{t:'ร'},{t:'ะ'},{slot:'ย'},{t:'ุ'},{slot:'ก'},{t:'ต'},{t:'์'}],choices:['ย','ก','ค','ข']},
+{full:'วิเคราะห์',tokens:[{t:'ว'},{t:'ิ'},{t:'เ'},{slot:'ค'},{t:'ร'},{t:'า'},{slot:'ะ'},{t:'ห'},{t:'์'}],choices:['ค','ะ','ข','ก']},
+{full:'สงกรานต์',tokens:[{t:'ส'},{t:'ง'},{slot:'ก'},{t:'ร'},{t:'า'},{slot:'น'},{t:'ต'},{t:'์'}],choices:['ก','น','ล','ณ']},
+{full:'เล่ห์กล',tokens:[{t:'เ'},{t:'ล'},{t:'่'},{t:'ห'},{t:'์'},{slot:'ก'},{slot:'ล'}],choices:['ก','ล','ข','ร']},
+{full:'ศักดิ์ศรี',tokens:[{t:'ศ'},{t:'ั'},{t:'ก'},{slot:'ด'},{t:'ิ'},{t:'์'},{t:'ศ'},{slot:'ร'},{t:'ี'}],choices:['ด','ร','ล','ต']},
+{full:'บรรเจิด',tokens:[{t:'บ'},{t:'ร'},{t:'ร'},{t:'เ'},{slot:'จ'},{t:'ิ'},{slot:'ด'}],choices:['จ','ด','ช','ต']},
+{full:'บรรจุ',tokens:[{t:'บ'},{t:'ร'},{t:'ร'},{slot:'จ'},{slot:'ุ',pos:'below',base:'จ'}],choices:['จ','ุ','ช','ู']},
+{full:'ตาลโตนด',tokens:[{t:'ต'},{t:'า'},{slot:'ล'},{t:'โ'},{t:'ต'},{slot:'น'},{t:'ด'}],choices:['ล','น','ร','ณ']},
+{full:'เฉลียวฉลาด',tokens:[{t:'เ'},{t:'ฉ'},{t:'ล'},{t:'ี'},{t:'ย'},{slot:'ว'},{t:'ฉ'},{slot:'ล'},{t:'า'},{t:'ด'}],choices:['ว','ล','ร','น']}
+];
+const cam=document.getElementById('cam'),board=document.getElementById('board'),tray=document.getElementById('tray'),msg=document.getElementById('msg'),scoreEl=document.getElementById('score'),wordName=document.getElementById('wordName'),cursor=document.getElementById('cursor'),ring=document.getElementById('ring');
+let order=[...WORDS.keys()],wi=0,score=0,slots=[],tiles=[],held=null,hover=null,hoverAt=0,sx=0,sy=0,lastHand=0,placingLock=false;
+const DWELL=300,SNAP=112;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function speak(text){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='th-TH';u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
+function slotDiv(ans,pos){const d=document.createElement('div');d.className='drop'+(pos?' mark '+pos:'');d.dataset.answer=ans;d.dataset.value='';d.textContent='';return d}
+function render(){placingLock=false;held=null;hover=null;board.innerHTML='';tray.innerHTML='';slots=[];tiles=[];const w=WORDS[order[wi%order.length]];wordName.textContent='คำที่ '+(wi+1)+' : '+w.full;msg.textContent='ชี้ค้างที่ตัวอักษร แล้วเลื่อนไปใกล้ช่อง';
+ for(let i=0;i<w.tokens.length;i++){const it=w.tokens[i]; if(it.slot){ if(it.pos){let cell=document.createElement('span');cell.className='cell fixed';cell.textContent=it.base||'';let d=slotDiv(it.slot,it.pos);cell.appendChild(d);board.appendChild(cell);slots.push(d);} else {let d=slotDiv(it.slot,'');board.appendChild(d);slots.push(d);} } else {let c=document.createElement('span');c.className='cell fixed';c.textContent=it.t;board.appendChild(c);} }
+ shuffle([...w.choices]).forEach((ch,i)=>{let t=document.createElement('div');t.className='tile';t.textContent=ch;t.dataset.value=ch;t.dataset.home=i;tray.appendChild(t);tiles.push(t)});
+}
+function resetWord(){slots.forEach(s=>{s.textContent='';s.dataset.value='';s.classList.remove('filled','target')});tiles.forEach(t=>{t.classList.remove('hidden','held');t.style.left='';t.style.top=''});held=null;placingLock=false;msg.textContent='ลองใหม่อีกครั้งนะ เติมคำเดิมใหม่';speak('ลองใหม่อีกครั้งนะ');}
+function checkIfComplete(){if(!slots.every(s=>s.dataset.value))return;const ok=slots.every(s=>s.dataset.value===s.dataset.answer); if(ok){score++;scoreEl.textContent=score;msg.textContent='เก่งมาก! '+WORDS[order[wi%order.length]].full;wordName.classList.add('flash');speak('เก่งมาก '+WORDS[order[wi%order.length]].full);setTimeout(()=>{wordName.classList.remove('flash');wi++; if(wi>=order.length){order=shuffle([...WORDS.keys()]);wi=0} render();},1450);}else{setTimeout(resetWord,650)}}
+function nearestSlot(x,y){let best=null,bd=1e9;for(const s of slots){const r=s.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const d=Math.hypot(x-cx,y-cy); if(d<bd){bd=d;best=s}}return bd<SNAP?best:null}
+function elementPick(x,y){let best=null,bd=1e9;for(const t of tiles){if(t.classList.contains('hidden')||t===held)continue;const r=t.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const d=Math.hypot(x-cx,y-cy);if(d<bd){bd=d;best=t}}return bd<70?best:null}
+function setHeld(tile,x,y){held=tile;tile.classList.add('held');tile.style.left=x+'px';tile.style.top=y+'px';msg.textContent='กำลังถือ '+tile.textContent+' นำไปใกล้ช่องวาง';}
+function autoPlace(x,y){if(!held||placingLock)return;const s=nearestSlot(x,y);slots.forEach(a=>a.classList.toggle('target',a===s)); if(!s)return; placingLock=true; s.textContent=held.dataset.value; s.dataset.value=held.dataset.value; s.classList.add('filled'); held.classList.add('hidden'); held.classList.remove('held'); held.style.left='';held.style.top=''; held=null; msg.textContent='วางแล้ว เติมให้ครบทุกช่อง'; setTimeout(()=>{placingLock=false;slots.forEach(a=>a.classList.remove('target'));checkIfComplete()},120);}
+function tickPointer(x,y){cursor.style.display='block';cursor.style.left=x+'px';cursor.style.top=y+'px';ring.style.display='block';ring.style.left=x+'px';ring.style.top=y+'px';lastHand=Date.now(); if(held){held.style.left=x+'px';held.style.top=y+'px';autoPlace(x,y);return} const p=elementPick(x,y); if(p!==hover){hover=p;hoverAt=Date.now();ring.classList.remove('ready')} if(p && Date.now()-hoverAt>DWELL){ring.classList.add('ready');setHeld(p,x,y);hover=null;hoverAt=Date.now()} }
+function noHand(){if(Date.now()-lastHand>500){cursor.style.display='none';ring.style.display='none';if(held){held.classList.remove('held');held.style.left='';held.style.top='';held=null;msg.textContent='มือหลุดจากกล้อง ตัวอักษรกลับถาดแล้ว'} }}
+render();
+const hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.78,minTrackingConfidence:.78});
+hands.onResults(res=>{if(res.multiHandLandmarks&&res.multiHandLandmarks.length){const tip=res.multiHandLandmarks[0][8];let x=(1-tip.x)*innerWidth,y=tip.y*innerHeight;sx=sx? sx*.68+x*.32:x;sy=sy? sy*.68+y*.32:y;tickPointer(sx,sy)}else noHand()});
+const camera=new Camera(cam,{onFrame:async()=>{await hands.send({image:cam})},width:1280,height:720});camera.start().then(()=>{msg.textContent='พร้อมเล่นแล้ว ชี้ค้างที่ตัวอักษร';}).catch(()=>{msg.textContent='เปิดกล้องไม่ได้ กรุณาอนุญาตการใช้กล้อง'});
+setInterval(noHand,350);
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>ARTHAI3 V8 Stable</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<style>
+  :root{
+    --slot: clamp(56px, 8vw, 90px);
+    --font: clamp(46px, 7.5vw, 82px);
+    --card: rgba(255,255,255,.16);
+    --card2: rgba(0,0,0,.48);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:"Noto Sans Thai","Sarabun",Tahoma,sans-serif;background:#111;color:#fff}
+  #video{position:fixed;inset:0;width:100vw;height:100vh;object-fit:cover;transform:scaleX(-1);z-index:0;background:#111}
+  #shade{position:fixed;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.25),rgba(0,0,0,.08),rgba(0,0,0,.36));z-index:1;pointer-events:none}
+  #ui{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:14px;pointer-events:none}
+  .topbar{width:min(1100px,96vw);display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card2);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:10px 14px;backdrop-filter:blur(5px)}
+  .title{font-weight:800;font-size:clamp(18px,2.8vw,30px);line-height:1.1}.small{font-size:clamp(14px,2vw,22px);opacity:.95}
+  .wordPanel{width:min(1120px,97vw);min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:18px 10px;backdrop-filter:blur(4px)}
+  #wordLayout{display:flex;align-items:flex-end;justify-content:center;gap:4px;flex-wrap:wrap;max-width:100%;line-height:1;padding:8px 6px;}
+  .textRun{font-size:var(--font);font-weight:900;text-shadow:0 3px 10px rgba(0,0,0,.75);white-space:pre;display:inline-flex;align-items:flex-end;height:calc(var(--slot) * 1.65)}
+  .slot{width:var(--slot);height:var(--slot);border:4px dashed rgba(255,255,255,.93);border-radius:18px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:var(--font);font-weight:900;position:relative;color:#fff;text-shadow:0 3px 8px rgba(0,0,0,.8);box-shadow:0 0 0 2px rgba(0,0,0,.15) inset;transition:.12s transform,.12s background,.12s box-shadow;}
+  .slot.topMark,.slot.bottomMark{width:calc(var(--slot) * .92);height:calc(var(--slot) * .56);font-size:calc(var(--font) * .78);border-radius:14px;border-width:3px;}
+  .stack{display:inline-grid;grid-template-rows:calc(var(--slot)*.58) var(--slot) calc(var(--slot)*.42);grid-template-columns:var(--slot);align-items:center;justify-items:center;margin:0 1px;}
+  .stack .topArea{grid-row:1}.stack .baseArea{grid-row:2}.stack .bottomArea{grid-row:3}
+  .fixedBase{width:var(--slot);height:var(--slot);display:flex;align-items:center;justify-content:center;font-size:var(--font);font-weight:900;text-shadow:0 3px 8px rgba(0,0,0,.8)}
+  .fixedMark{font-size:calc(var(--font) * .72);font-weight:900;text-shadow:0 3px 8px rgba(0,0,0,.8);height:calc(var(--slot)*.56);display:flex;align-items:center;justify-content:center;line-height:1}
+  .fixedBottom{font-size:calc(var(--font)*.62);height:calc(var(--slot)*.42);display:flex;align-items:center;justify-content:center;line-height:1}
+  .slot.near{background:rgba(255,235,59,.65);box-shadow:0 0 30px rgba(255,235,59,.9),0 0 0 4px rgba(255,255,255,.9) inset;transform:scale(1.08)}
+  .slot.filled{border-style:solid;background:rgba(67,255,123,.38);border-color:#fff}.slot.wrongFlash{background:rgba(255,60,60,.7)!important;box-shadow:0 0 32px rgba(255,0,0,.9)}
+  #tray{width:min(1120px,97vw);min-height:122px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.18);border-radius:28px;padding:14px 10px;margin-bottom:4px;backdrop-filter:blur(4px)}
+  .tile{width:clamp(62px,9vw,102px);height:clamp(62px,9vw,102px);border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(255,235,122,.98));color:#222;display:flex;align-items:center;justify-content:center;font-size:clamp(44px,7vw,78px);font-weight:900;border:4px solid #fff;box-shadow:0 8px 18px rgba(0,0,0,.35);pointer-events:auto;user-select:none;line-height:1;transition:.1s transform,.1s opacity}
+  .tile.hover{transform:scale(1.12);box-shadow:0 0 0 6px rgba(255,255,255,.45),0 10px 18px rgba(0,0,0,.35)}
+  .tile.dragging{position:fixed;z-index:20;left:0;top:0;pointer-events:none;transform:translate(-50%,-50%) scale(1.12);background:linear-gradient(180deg,#fff,#b8f7ff)}
+  .tile.used{display:none}.tile.pop{animation:pop .25s ease}@keyframes pop{50%{transform:scale(1.18)}}
+  #cursor{position:fixed;z-index:30;width:42px;height:42px;border:5px solid #ff2e2e;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 8px rgba(255,46,46,.22),0 0 22px rgba(255,46,46,.7);pointer-events:none;display:none}
+  #cursor.pick{border-color:#00e5ff;box-shadow:0 0 0 8px rgba(0,229,255,.22),0 0 24px rgba(0,229,255,.8)}
+  #msg{font-size:clamp(18px,3vw,34px);font-weight:800;text-align:center;background:rgba(0,0,0,.45);border-radius:20px;padding:8px 18px;min-height:52px;display:flex;align-items:center;justify-content:center}.danger{background:rgba(170,0,0,.62)!important}.good{background:rgba(0,130,40,.62)!important}
+  .hidden{display:none!important}
+  @media (max-width:720px){:root{--slot:58px;--font:48px}#ui{padding:8px}.wordPanel{min-height:200px}.topbar{border-radius:16px}.slot{border-width:3px;border-radius:14px}.tile{border-radius:16px}}
+</style>
+</head>
+<body>
+<video id="video" autoplay muted playsinline></video><div id="shade"></div><div id="cursor"></div>
+<div id="ui">
+  <div class="topbar"><div><div class="title">AR เติมคำด้วยนิ้ววิเศษ V8 Stable</div><div class="small" id="status">เปิดกล้องแล้วเริ่มเล่นทันที • ชี้ค้างที่ตัวอักษรเพื่อหยิบ</div></div><div class="small">คะแนน <b id="score">0</b> | คำที่ <b id="wordNo">1</b>/<b id="total">20</b></div></div>
+  <div class="wordPanel"><div id="wordLayout"></div><div id="msg">ยกมือให้เห็นนิ้วชี้ชัด ๆ หรือใช้เมาส์/นิ้วแตะทดสอบได้</div></div>
+  <div id="tray"></div>
+</div>
+<script>
+/* V8 Stable: no start button, robust snap/drop, check only when all blanks filled. */
+const WORDS=[
+ {full:'ครอบครัว', layout:[{t:'ครอ'},{s:'บ'},{t:'ค'},{stack:[{top:{s:'ั'}},{base:{t:'ร'}}]},{t:'ว'}], choices:['บ','ั','ร','ล','ม']},
+ {full:'กลมเกลียว', layout:[{t:'กลมเ'},{s:'ก'},{t:'ลีย'},{s:'ว'}], choices:['ก','ว','ล','ย','ม']},
+ {full:'ไขว้เขว', layout:[{t:'ไ'},{s:'ข'},{stack:[{top:{s:'้'}},{base:{t:'ว'}}]},{t:'เขว'}], choices:['ข','้','ค','่','ว']},
+ {full:'หมึกดำ', layout:[{t:'ห'},{stack:[{top:{t:'ึ'}},{base:{s:'ม'}}]},{s:'ก'},{t:'ดำ'}], choices:['ม','ก','น','ง','ด']},
+ {full:'เหนื่อยล้า', layout:[{t:'เห'},{stack:[{top:{t:'ื่'}},{base:{s:'น'}}]},{t:'อ'},{s:'ย'},{t:'ล้า'}], choices:['น','ย','ว','ล','อ']},
+ {full:'ใบหม่อน', layout:[{t:'ใบห'},{stack:[{top:{t:'่'}},{base:{s:'ม'}}]},{t:'อ'},{s:'น'}], choices:['ม','น','ห','อ','ว']},
+ {full:'หมวดหมู่', layout:[{t:'หม'},{s:'ว'},{t:'ดห'},{stack:[{top:{t:'่'}},{base:{s:'ม'}}]},{t:'ู'}], choices:['ว','ม','น','ล','ด']},
+ {full:'ตลบ', layout:[{s:'ต'},{t:'ล'},{s:'บ'}], choices:['ต','บ','ก','ด','ล']},
+ {full:'ฝรั่ง', layout:[{t:'ฝ'},{stack:[{top:{t:'ั่'}},{base:{s:'ร'}}]},{t:'ง'},{s:' '}], choices:['ร','ง','ล','น','ว'], hideEmpty:true},
+ {full:'อร่อย', layout:[{t:'อ'},{stack:[{top:{t:'่'}},{base:{s:'ร'}}]},{t:'อ'},{s:'ย'}], choices:['ร','ย','ล','ว','อ']},
+ {full:'พระจันทร์', layout:[{t:'พระ'},{stack:[{top:{t:'ั'}},{base:{s:'จ'}}]},{t:'นท'},{stack:[{top:{t:'์'}},{base:{s:'ร'}}]}], choices:['จ','ร','ช','ล','ท']},
+ {full:'ประยุกต์', layout:[{t:'ประ'},{s:'ย'},{t:'ุ'},{s:'ก'},{t:'ต์'}], choices:['ย','ก','ค','ข','ต']},
+ {full:'วิเคราะห์', layout:[{t:'วิเ'},{s:'ค'},{t:'รา'},{s:'ะ'},{t:'ห์'}], choices:['ค','ะ','ข','ก','ห']},
+ {full:'สงกรานต์', layout:[{t:'สง'},{s:'ก'},{t:'รา'},{s:'น'},{t:'ต์'}], choices:['ก','น','ล','ณ','ร']},
+ {full:'เล่ห์กล', layout:[{t:'เล่ห์'},{s:'ก'},{s:'ล'}], choices:['ก','ล','ข','ร','ว']},
+ {full:'ศักดิ์ศรี', layout:[{t:'ศัก'},{stack:[{top:{t:'ิ์'}},{base:{s:'ด'}}]},{t:'ศ'},{s:'ร'},{t:'ี'}], choices:['ด','ร','ล','ต','ศ']},
+ {full:'บรรเจิด', layout:[{t:'บรรเ'},{s:'จ'},{t:'ิ'},{s:'ด'}], choices:['จ','ด','ช','ต','บ']},
+ {full:'บรรจุ', layout:[{t:'บรร'},{stack:[{base:{s:'จ'}},{bottom:{s:'ุ'}}]}], choices:['จ','ุ','ช','ู','บ']},
+ {full:'ตาลโตนด', layout:[{t:'ตา'},{s:'ล'},{t:'โต'},{s:'น'},{t:'ด'}], choices:['ล','น','ร','ณ','ด']},
+ {full:'เฉลียวฉลาด', layout:[{t:'เฉลีย'},{s:'ว'},{t:'ฉ'},{s:'ล'},{t:'าด'}], choices:['ว','ล','ร','น','ฉ']}
+];
+let idx=0,score=0,slots=[],tiles=[],drag=null,hoverTile=null,hoverStart=0,lastHand=0,nearSlot=null,dropLockUntil=0;
+const $=q=>document.querySelector(q), video=$('#video'), cursor=$('#cursor'), msg=$('#msg'), tray=$('#tray'), wordLayout=$('#wordLayout');
+$('#total').textContent=WORDS.length;
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function say(text){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='th-TH';u.rate=.88;speechSynthesis.speak(u)}catch(e){}}
+function beep(ok=true){try{const ac=new (window.AudioContext||window.webkitAudioContext)(), o=ac.createOscillator(), g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=ok?660:180;g.gain.value=.06;o.start();setTimeout(()=>{o.stop();ac.close()},ok?140:260)}catch(e){}}
+function showMsg(t,cls=''){msg.textContent=t;msg.className=cls}
+function addSlot(parent,ans,cls=''){
+  const el=document.createElement('div');el.className='slot '+cls;el.dataset.answer=ans;el.dataset.value='';el.textContent='';parent.appendChild(el);slots.push(el);return el;
+}
+function addFixed(parent,t,cls=''){
+ const el=document.createElement('div');el.className=cls||'fixedBase';el.textContent=t;parent.appendChild(el);return el;
+}
+function buildPart(part,parent){
+ if(part.t!==undefined){const sp=document.createElement('span');sp.className='textRun';sp.textContent=part.t;parent.appendChild(sp);return;}
+ if(part.s!==undefined){ if(part.s===' '){return;} addSlot(parent,part.s);return;}
+ if(part.stack){const st=document.createElement('span');st.className='stack'; parent.appendChild(st); part.stack.forEach(row=>{
+   if(row.top){const area=document.createElement('span');area.className='topArea';st.appendChild(area); row.top.s!==undefined?addSlot(area,row.top.s,'topMark'):addFixed(area,row.top.t,'fixedMark')}
+   if(row.base){const area=document.createElement('span');area.className='baseArea';st.appendChild(area); row.base.s!==undefined?addSlot(area,row.base.s):addFixed(area,row.base.t,'fixedBase')}
+   if(row.bottom){const area=document.createElement('span');area.className='bottomArea';st.appendChild(area); row.bottom.s!==undefined?addSlot(area,row.bottom.s,'bottomMark'):addFixed(area,row.bottom.t,'fixedBottom')}
+ });}
+}
+function loadWord(){
+ slots=[]; tiles=[]; drag=null; hoverTile=null; hoverStart=0; nearSlot=null; tray.innerHTML=''; wordLayout.innerHTML='';
+ const w=WORDS[idx]; $('#wordNo').textContent=idx+1; w.layout.forEach(p=>buildPart(p,wordLayout));
+ shuffle(w.choices).forEach((ch,i)=>{const t=document.createElement('div');t.className='tile';t.textContent=ch;t.dataset.value=ch;t.dataset.id='tile'+i;tray.appendChild(t);tiles.push(t)});
+ showMsg('คำว่า “'+w.full+'” เติมให้ครบก่อน แล้วระบบค่อยตรวจ');
+}
+function resetCurrent(){
+ slots.forEach(s=>{s.dataset.value='';s.textContent='';s.classList.remove('filled','near','wrongFlash')});
+ tiles.forEach(t=>{t.classList.remove('used','dragging','hover'); t.style.left='';t.style.top=''; tray.appendChild(t)});
+ drag=null; hoverTile=null; hoverStart=0; nearSlot=null; showMsg('ลองคำเดิมอีกครั้งนะ','danger'); beep(false);
+ setTimeout(()=>showMsg('คำว่า “'+WORDS[idx].full+'” เติมให้ครบก่อน แล้วระบบค่อยตรวจ'),900);
+}
+function nextWord(){ score++; $('#score').textContent=score; showMsg('เก่งมากค่ะ ⭐ '+WORDS[idx].full,'good'); beep(true); say(WORDS[idx].full); setTimeout(()=>{idx=(idx+1)%WORDS.length; loadWord()},1200); }
+function checkIfFull(){ if(slots.every(s=>s.dataset.value)){ const ok=slots.every(s=>s.dataset.value===s.dataset.answer); if(ok) nextWord(); else {slots.filter(s=>s.dataset.value!==s.dataset.answer).forEach(s=>s.classList.add('wrongFlash')); setTimeout(resetCurrent,900);} } }
+function distToSlot(x,y,s){const r=s.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; return Math.hypot(x-cx,y-cy)}
+function closestEmptySlot(x,y){let best=null,bd=1e9; slots.forEach(s=>{if(s.dataset.value)return; const d=distToSlot(x,y,s); if(d<bd){bd=d;best=s}}); const radius=Math.max(105, window.innerWidth*.075); return bd<radius?best:null;}
+function elementAt(x,y){cursor.style.display='none'; const el=document.elementFromPoint(x,y); cursor.style.display='block'; return el;}
+function pickTile(tile,x,y){ if(!tile||tile.classList.contains('used')||drag)return; drag=tile; tile.classList.add('dragging'); cursor.classList.add('pick'); moveDrag(x,y); showMsg('กำลังถือ: '+tile.dataset.value); }
+function moveDrag(x,y){ if(drag){drag.style.left=x+'px'; drag.style.top=y+'px';}}
+function dropToSlot(s){ if(!drag||!s||Date.now()<dropLockUntil)return; s.dataset.value=drag.dataset.value; s.textContent=drag.dataset.value; s.classList.add('filled','pop'); setTimeout(()=>s.classList.remove('pop'),260); drag.classList.remove('dragging','hover'); drag.classList.add('used'); drag.style.left='';drag.style.top=''; cursor.classList.remove('pick'); drag=null; dropLockUntil=Date.now()+420; showMsg('วางแล้ว เติมต่อให้ครบ'); checkIfFull(); }
+function updateNear(x,y){ slots.forEach(s=>s.classList.remove('near')); nearSlot=drag?closestEmptySlot(x,y):null; if(nearSlot) nearSlot.classList.add('near'); }
+function control(x,y,hand=true){
+ lastHand=hand?Date.now():lastHand; cursor.style.display='block'; cursor.style.left=x+'px'; cursor.style.top=y+'px'; moveDrag(x,y); updateNear(x,y); if(drag&&nearSlot){dropToSlot(nearSlot);return;}
+ if(!drag){ const el=elementAt(x,y); const tile=el&&el.closest?el.closest('.tile'):null; tiles.forEach(t=>t.classList.remove('hover')); if(tile&&!tile.classList.contains('used')) tile.classList.add('hover'); if(tile!==hoverTile){hoverTile=tile; hoverStart=Date.now(); return;} if(tile && Date.now()-hoverStart>300) pickTile(tile,x,y); }
+}
+// Mouse/touch fallback for testing and classroom emergency
+window.addEventListener('mousemove',e=>control(e.clientX,e.clientY,false));
+window.addEventListener('touchmove',e=>{if(e.touches[0]){e.preventDefault(); control(e.touches[0].clientX,e.touches[0].clientY,false)}},{passive:false});
+window.addEventListener('click',e=>{ const tile=e.target.closest&&e.target.closest('.tile'); if(tile) pickTile(tile,e.clientX,e.clientY); else if(drag&&nearSlot) dropToSlot(nearSlot); });
+let sx=innerWidth/2, sy=innerHeight/2;
+function initHands(){
+ const hands=new Hands({locateFile:file=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+ hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.72,minTrackingConfidence:.72});
+ hands.onResults(res=>{ if(res.multiHandLandmarks&&res.multiHandLandmarks.length){ const tip=res.multiHandLandmarks[0][8]; const x=(1-tip.x)*innerWidth, y=tip.y*innerHeight; sx=sx*.68+x*.32; sy=sy*.68+y*.32; control(sx,sy,true); $('#status').textContent='พบมือแล้ว • ชี้ค้าง 0.3 วิ เพื่อหยิบ / เข้าใกล้ช่องเพื่อวาง'; } else { if(Date.now()-lastHand>600){ $('#status').textContent='ยังไม่พบมือ • ยกนิ้วชี้ให้ชัดในกล้อง'; cursor.classList.remove('pick'); if(drag){drag.classList.remove('dragging');drag.classList.remove('used');drag.style.left='';drag.style.top='';tray.appendChild(drag);drag=null;} } } });
+ const camera=new Camera(video,{onFrame:async()=>{await hands.send({image:video})},width:1280,height:720}); camera.start().catch(err=>{showMsg('เปิดกล้องไม่ได้: กดอนุญาตกล้อง หรือใช้ HTTPS/GitHub Pages','danger'); console.error(err)});
+}
+loadWord();
+if(window.Hands&&window.Camera){initHands()}else{showMsg('โหลด MediaPipe ไม่สำเร็จ กรุณาเชื่อมอินเทอร์เน็ตแล้วรีเฟรช','danger')}
+</script>
+</body>
+</html>

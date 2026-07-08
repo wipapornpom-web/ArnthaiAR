@@ -1,0 +1,22 @@
+const WORDS = [
+  { full:'ครอบครัว', parts:[{t:'ค'},{t:'ร'},{t:'อ'},{t:'บ', blank:true},{t:'ค'},{t:'ร', blank:true, marks:'ั'},{t:'ว'}], choices:['บ','ร','ล','ว','ม','ก'] },
+  { full:'กลมเกลียว', parts:[{t:'ก'},{t:'ล'},{t:'ม'},{t:'เ'},{t:'ก', blank:true},{t:'ี'},{t:'ย', blank:true},{t:'ว'}], choices:['ก','ย','ล','ว','ม','ง'] },
+  { full:'ไขว้เขว', parts:[{t:'ไ'},{t:'ข', blank:true},{t:'ว', marks:'้', blank:true},{t:'เ'},{t:'ข'},{t:'ว'}], choices:['ข','ว','ค','ง','ล'] },
+  { full:'หมึกดำ', parts:[{t:'ห'},{t:'ม', blank:true},{t:'ึ'},{t:'ก', blank:true},{t:'ด'},{t:'ำ'}], choices:['ม','ก','น','ง','ล'] },
+  { full:'เหนื่อยล้า', parts:[{t:'เ'},{t:'ห'},{t:'น', blank:true, marks:'ื่'},{t:'อ'},{t:'ย', blank:true},{t:'ล', marks:'้'},{t:'า'}], choices:['น','ย','ว','ล','ม'] },
+  { full:'ใบหม่อน', parts:[{t:'ใ'},{t:'บ'},{t:'ห', blank:true},{t:'ม', marks:'่'},{t:'อ', blank:true},{t:'น'}], choices:['ห','อ','ม','น','ร'] },
+  { full:'หมวดหมู่', parts:[{t:'ห'},{t:'ม'},{t:'ว', blank:true},{t:'ด'},{t:'ห'},{t:'ม', blank:true, marks:'ู่'}], choices:['ว','ม','น','ล','ด'] },
+  { full:'ตลบ', parts:[{t:'ต', blank:true},{t:'ล'},{t:'บ', blank:true}], choices:['ต','บ','ก','ด','ล'] },
+  { full:'ฝรั่ง', parts:[{t:'ฝ'},{t:'ร', blank:true},{t:'ั'},{t:'่'},{t:'ง', blank:true}], choices:['ร','ง','ล','น','ว'] },
+  { full:'อร่อย', parts:[{t:'อ'},{t:'ร', blank:true},{t:'่'},{t:'อ'},{t:'ย', blank:true}], choices:['ร','ย','ล','ว','ม'] },
+  { full:'พระจันทร์', parts:[{t:'พ'},{t:'ร'},{t:'ะ'},{t:'จ', blank:true, marks:'ั'},{t:'น'},{t:'ท', blank:true},{t:'ร', marks:'์'}], choices:['จ','ท','ช','น','ร'] },
+  { full:'ประยุกต์', parts:[{t:'ป'},{t:'ร'},{t:'ะ'},{t:'ย', blank:true},{t:'ุ'},{t:'ก', blank:true},{t:'ต', marks:'์'}], choices:['ย','ก','ค','ข','ต'] },
+  { full:'วิเคราะห์', parts:[{t:'ว'},{t:'ิ'},{t:'เ'},{t:'ค', blank:true},{t:'ร'},{t:'า'},{t:'ะ', blank:true},{t:'ห', marks:'์'}], choices:['ค','ะ','ข','ก','ร'] },
+  { full:'สงกรานต์', parts:[{t:'ส'},{t:'ง'},{t:'ก', blank:true},{t:'ร'},{t:'า'},{t:'น', blank:true},{t:'ต', marks:'์'}], choices:['ก','น','ล','ณ','ร'] },
+  { full:'เล่ห์กล', parts:[{t:'เ'},{t:'ล', marks:'่'},{t:'ห', marks:'์'},{t:'ก', blank:true},{t:'ล', blank:true}], choices:['ก','ล','ข','ร','ห'] },
+  { full:'ศักดิ์ศรี', parts:[{t:'ศ'},{t:'ั'},{t:'ก'},{t:'ด', blank:true, marks:'ิ์'},{t:'ศ'},{t:'ร', blank:true},{t:'ี'}], choices:['ด','ร','ล','ต','ศ'] },
+  { full:'บรรเจิด', parts:[{t:'บ'},{t:'ร'},{t:'ร'},{t:'เ'},{t:'จ', blank:true},{t:'ิ'},{t:'ด', blank:true}], choices:['จ','ด','ช','ต','ร'] },
+  { full:'บรรจุ', parts:[{t:'บ'},{t:'ร'},{t:'ร'},{t:'จ', blank:true},{t:'ุ', blank:true}], choices:['จ','ุ','ช','ู','ร'] },
+  { full:'ตาลโตนด', parts:[{t:'ต'},{t:'า'},{t:'ล', blank:true},{t:'โ'},{t:'ต'},{t:'น', blank:true},{t:'ด'}], choices:['ล','น','ร','ณ','ด'] },
+  { full:'เฉลียวฉลาด', parts:[{t:'เ'},{t:'ฉ'},{t:'ล'},{t:'ี'},{t:'ย'},{t:'ว', blank:true},{t:'ฉ'},{t:'ล', blank:true},{t:'า'},{t:'ด'}], choices:['ว','ล','ร','น','ด'] }
+];

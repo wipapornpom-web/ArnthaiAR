@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>ARTHAI3 V6 - ชี้นิ้วเติมคำ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <video id="camera" autoplay playsinline muted></video>
+  <canvas id="fx"></canvas>
+
+  <main class="hud">
+    <section id="start" class="panel">
+      <h1>AR เติมคำด้วยนิ้ววิเศษ</h1>
+      <p>ชี้นิ้วค้างที่ตัวอักษรเพื่อหยิบ แล้วเลื่อนไปใกล้ช่อง ระบบจะวางให้อัตโนมัติ</p>
+      <button id="startBtn">เริ่มเล่น</button>
+      <small>แนะนำ: เปิดบน Chrome/Edge และอนุญาตใช้กล้อง</small>
+    </section>
+
+    <section id="game" class="game hidden">
+      <div class="topbar">
+        <div>ข้อ <span id="roundNo">1</span>/<span id="roundTotal">20</span></div>
+        <div>คะแนน <span id="score">0</span></div>
+      </div>
+      <div id="msg" class="msg">ยกมือให้กล้องเห็นชัด ๆ</div>
+      <div id="word" class="word"></div>
+      <div id="tray" class="tray"></div>
+    </section>
+
+    <section id="finish" class="panel hidden">
+      <h1>เก่งมากค่ะ ⭐</h1>
+      <p>คะแนนรวม <b id="finalScore">0</b></p>
+      <button id="restartBtn">เล่นใหม่</button>
+    </section>
+  </main>
+
+  <div id="cursor" class="cursor"><span></span></div>
+  <div id="heldGhost" class="held hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="words.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
